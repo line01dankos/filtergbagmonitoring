@@ -22,140 +22,282 @@
         @keyframes fadeOut {
             to { opacity: 0; transform: translateX(100%); }
         }
+        .warning-pulse {
+            animation: warningPulse 2s infinite;
+        }
+        @keyframes warningPulse {
+            0%, 100% { background-color: #fbbf24; }
+            50% { background-color: #f59e0b; }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
     <!-- Toast Container -->
     <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
 
-    <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
         <!-- Header -->
         <header class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">Filter Bag Monitoring</h1>
+            <h1 class="text-4xl font-bold text-gray-800 mb-2">Filter Bag Monitoring System</h1>
             <p class="text-gray-600">Sistem Monitoring Multi-Device Real-time</p>
-            <div class="flex justify-center items-center mt-4 space-x-4">
-                <div class="flex items-center space-x-2">
-                    <div id="connectionStatus" class="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></div>
-                    <span id="connectionText" class="text-sm text-gray-600">Menghubungkan...</span>
-                </div>
-                <div class="text-sm text-gray-500">
-                    Online: <span id="onlineCount" class="font-semibold">-</span>
-                </div>
-            </div>
         </header>
 
-        <!-- Input Form -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h2 class="text-2xl font-semibold text-gray-800 mb-6">Tambah Data Filter Bag</h2>
-            <form id="filterForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                    <label for="bagNumber" class="block text-sm font-medium text-gray-700 mb-2">Nomor Bag</label>
-                    <input type="text" id="bagNumber" name="bagNumber" required 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                <div>
-                    <label for="location" class="block text-sm font-medium text-gray-700 mb-2">Lokasi</label>
-                    <input type="text" id="location" name="location" required 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                <div>
-                    <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                    <select id="status" name="status" required 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Pilih Status</option>
-                        <option value="Baik">Baik</option>
-                        <option value="Perlu Perhatian">Perlu Perhatian</option>
-                        <option value="Rusak">Rusak</option>
-                        <option value="Maintenance">Maintenance</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="pressure" class="block text-sm font-medium text-gray-700 mb-2">Tekanan (Bar)</label>
-                    <input type="number" id="pressure" name="pressure" step="0.1" 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                <div>
-                    <label for="temperature" class="block text-sm font-medium text-gray-700 mb-2">Suhu (°C)</label>
-                    <input type="number" id="temperature" name="temperature" 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                <div>
-                    <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">Catatan</label>
-                    <input type="text" id="notes" name="notes" 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                <div class="md:col-span-2 lg:col-span-3">
-                    <button type="submit" 
-                            class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition duration-200 shadow-lg hover:shadow-xl">
-                        💾 Simpan Data
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Filter Controls -->
-        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-            <h3 class="text-xl font-semibold text-gray-800 mb-4">Filter & Pencarian</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label for="searchInput" class="block text-sm font-medium text-gray-700 mb-2">Cari</label>
-                    <input type="text" id="searchInput" placeholder="Cari nomor bag, lokasi, atau catatan..." 
-                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                </div>
-                <div>
-                    <label for="statusFilter" class="block text-sm font-medium text-gray-700 mb-2">Filter Status</label>
-                    <select id="statusFilter" 
-                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                        <option value="">Semua Status</option>
-                        <option value="Baik">Baik</option>
-                        <option value="Perlu Perhatian">Perlu Perhatian</option>
-                        <option value="Rusak">Rusak</option>
-                        <option value="Maintenance">Maintenance</option>
-                    </select>
-                </div>
-                <div class="flex items-end">
-                    <button id="clearFilters" 
-                            class="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
-                        🗑️ Reset Filter
-                    </button>
-                </div>
+        <!-- Navigation -->
+        <nav class="bg-white rounded-xl shadow-lg mb-8">
+            <div class="flex flex-wrap justify-center">
+                <button onclick="showSection('dashboard')" id="nav-dashboard" 
+                        class="nav-btn px-6 py-3 font-semibold rounded-t-xl bg-blue-600 text-white">
+                    📊 Dashboard
+                </button>
+                <button onclick="showSection('pemakaian')" id="nav-pemakaian" 
+                        class="nav-btn px-6 py-3 font-semibold text-gray-600 hover:bg-gray-100">
+                    📝 Input Pemakaian
+                </button>
+                <button onclick="showSection('penggantian')" id="nav-penggantian" 
+                        class="nav-btn px-6 py-3 font-semibold text-gray-600 hover:bg-gray-100">
+                    🔄 Input Penggantian
+                </button>
+                <button onclick="showSection('musnah')" id="nav-musnah" 
+                        class="nav-btn px-6 py-3 font-semibold text-gray-600 hover:bg-gray-100">
+                    🗑️ Input Musnah
+                </button>
+                <button onclick="showSection('history')" id="nav-history" 
+                        class="nav-btn px-6 py-3 font-semibold text-gray-600 hover:bg-gray-100 rounded-tr-xl">
+                    📋 History
+                </button>
             </div>
-        </div>
+        </nav>
 
-        <!-- Data Table -->
-        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                <div class="flex justify-between items-center">
-                    <h3 class="text-xl font-semibold text-gray-800">Data Filter Bag</h3>
-                    <div class="text-sm text-gray-600">
-                        Total: <span id="totalCount" class="font-semibold">0</span> data
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="section">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- FBD Y 60 -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">FBD Y 60</h3>
+                    <div class="space-y-4">
+                        <div class="filter-status" data-mesin="FBD Y 60" data-tipe="warna">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-medium">Filter Warna</span>
+                                <span class="usage-count text-lg font-bold">0/300</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3">
+                                <div class="usage-bar bg-green-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="filter-status" data-mesin="FBD Y 60" data-tipe="putih">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-medium">Filter Putih</span>
+                                <span class="usage-count text-lg font-bold">0/300</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3">
+                                <div class="usage-bar bg-green-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FBD Y 150 -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">FBD Y 150</h3>
+                    <div class="space-y-4">
+                        <div class="filter-status" data-mesin="FBD Y 150" data-tipe="warna">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-medium">Filter Warna</span>
+                                <span class="usage-count text-lg font-bold">0/300</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3">
+                                <div class="usage-bar bg-green-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="filter-status" data-mesin="FBD Y 150" data-tipe="putih">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-medium">Filter Putih</span>
+                                <span class="usage-count text-lg font-bold">0/300</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3">
+                                <div class="usage-bar bg-green-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- FBD Glatt -->
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">FBD Glatt</h3>
+                    <div class="space-y-4">
+                        <div class="filter-status" data-mesin="FBD Glatt" data-tipe="warna">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-medium">Filter Warna</span>
+                                <span class="usage-count text-lg font-bold">0/300</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3">
+                                <div class="usage-bar bg-green-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div class="filter-status" data-mesin="FBD Glatt" data-tipe="putih">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-medium">Filter Putih</span>
+                                <span class="usage-count text-lg font-bold">0/300</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-3">
+                                <div class="usage-bar bg-green-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nomor Bag</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lokasi</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tekanan</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Suhu</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dataTableBody" class="bg-white divide-y divide-gray-200">
-                        <tr id="noDataRow">
-                            <td colspan="7" class="px-6 py-8 text-center text-gray-500">
-                                <div class="flex flex-col items-center">
-                                    <div class="text-4xl mb-2">📊</div>
-                                    <div>Belum ada data. Tambahkan data pertama!</div>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+        </div>
+
+        <!-- Input Pemakaian Section -->
+        <div id="pemakaian-section" class="section hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">Input Pemakaian Filter</h2>
+                <form id="pemakaianForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="pemakaian-operator" class="block text-sm font-medium text-gray-700 mb-2">Nama Operator</label>
+                        <input type="text" id="pemakaian-operator" name="operator" required 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label for="pemakaian-mesin" class="block text-sm font-medium text-gray-700 mb-2">Mesin</label>
+                        <select id="pemakaian-mesin" name="mesin" required 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Pilih Mesin</option>
+                            <option value="FBD Y 60">FBD Y 60</option>
+                            <option value="FBD Y 150">FBD Y 150</option>
+                            <option value="FBD Glatt">FBD Glatt</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="pemakaian-tipe" class="block text-sm font-medium text-gray-700 mb-2">Tipe Filter</label>
+                        <select id="pemakaian-tipe" name="tipe" required 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Pilih Tipe</option>
+                            <option value="warna">Warna</option>
+                            <option value="putih">Putih</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" 
+                                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
+                            📝 Catat Pemakaian
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Input Penggantian Section -->
+        <div id="penggantian-section" class="section hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">Input Penggantian Filter</h2>
+                <form id="penggantianForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="penggantian-operator" class="block text-sm font-medium text-gray-700 mb-2">Nama Operator</label>
+                        <input type="text" id="penggantian-operator" name="operator" required 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label for="penggantian-mesin" class="block text-sm font-medium text-gray-700 mb-2">Mesin</label>
+                        <select id="penggantian-mesin" name="mesin" required 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Pilih Mesin</option>
+                            <option value="FBD Y 60">FBD Y 60</option>
+                            <option value="FBD Y 150">FBD Y 150</option>
+                            <option value="FBD Glatt">FBD Glatt</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="penggantian-tipe" class="block text-sm font-medium text-gray-700 mb-2">Tipe Filter</label>
+                        <select id="penggantian-tipe" name="tipe" required 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Pilih Tipe</option>
+                            <option value="warna">Warna</option>
+                            <option value="putih">Putih</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="penggantian-vendor" class="block text-sm font-medium text-gray-700 mb-2">Nama Vendor</label>
+                        <input type="text" id="penggantian-vendor" name="vendor" required 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div class="md:col-span-2">
+                        <button type="submit" 
+                                class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
+                            🔄 Catat Penggantian
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Input Musnah Section -->
+        <div id="musnah-section" class="section hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">Input Pemusnahan Filter</h2>
+                <form id="musnahForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="musnah-operator" class="block text-sm font-medium text-gray-700 mb-2">Nama Operator</label>
+                        <input type="text" id="musnah-operator" name="operator" required 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label for="musnah-mesin" class="block text-sm font-medium text-gray-700 mb-2">Mesin</label>
+                        <select id="musnah-mesin" name="mesin" required 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Pilih Mesin</option>
+                            <option value="FBD Y 60">FBD Y 60</option>
+                            <option value="FBD Y 150">FBD Y 150</option>
+                            <option value="FBD Glatt">FBD Glatt</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="musnah-tipe" class="block text-sm font-medium text-gray-700 mb-2">Tipe Filter</label>
+                        <select id="musnah-tipe" name="tipe" required 
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Pilih Tipe</option>
+                            <option value="warna">Warna</option>
+                            <option value="putih">Putih</option>
+                        </select>
+                    </div>
+                    <div class="flex items-end">
+                        <button type="submit" 
+                                class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
+                            🗑️ Catat Pemusnahan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- History Section -->
+        <div id="history-section" class="section hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">History Aktivitas</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktivitas</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Operator</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mesin</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe Filter</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Detail</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody" class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="6" class="px-6 py-8 text-center text-gray-500">
+                                    <div class="flex flex-col items-center">
+                                        <div class="text-4xl mb-2">📋</div>
+                                        <div>Belum ada history aktivitas</div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -164,7 +306,7 @@
     <script type="module">
         // Import Firebase modules
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, serverTimestamp, connectFirestoreEmulator } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        import { getFirestore, collection, addDoc, onSnapshot, doc, setDoc, getDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
         // Firebase configuration
         const firebaseConfig = {
@@ -182,27 +324,16 @@
         const db = getFirestore(app);
 
         // Global variables
-        let allData = [];
-        let onlineUsers = new Set();
-
-        // DOM elements
-        const form = document.getElementById('filterForm');
-        const tableBody = document.getElementById('dataTableBody');
-        const noDataRow = document.getElementById('noDataRow');
-        const searchInput = document.getElementById('searchInput');
-        const statusFilter = document.getElementById('statusFilter');
-        const clearFiltersBtn = document.getElementById('clearFilters');
-        const totalCount = document.getElementById('totalCount');
-        const connectionStatus = document.getElementById('connectionStatus');
-        const connectionText = document.getElementById('connectionText');
-        const onlineCount = document.getElementById('onlineCount');
+        let filterData = {};
+        let historyData = [];
 
         // Toast notification function
         function showToast(message, type = 'success') {
             const toast = document.createElement('div');
             toast.className = `toast px-6 py-3 rounded-lg text-white font-medium shadow-lg ${
                 type === 'success' ? 'bg-green-500' : 
-                type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+                type === 'error' ? 'bg-red-500' : 
+                type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
             }`;
             toast.textContent = message;
             
@@ -214,196 +345,226 @@
             }, 3000);
         }
 
-        // Update connection status
-        function updateConnectionStatus(connected) {
-            if (connected) {
-                connectionStatus.className = 'w-3 h-3 bg-green-500 rounded-full';
-                connectionText.textContent = 'Terhubung';
-            } else {
-                connectionStatus.className = 'w-3 h-3 bg-red-500 rounded-full animate-pulse';
-                connectionText.textContent = 'Terputus';
+        // Navigation functions
+        window.showSection = function(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionName + '-section').classList.remove('hidden');
+            
+            // Update navigation buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = 'nav-btn px-6 py-3 font-semibold text-gray-600 hover:bg-gray-100';
+            });
+            
+            const activeBtn = document.getElementById('nav-' + sectionName);
+            activeBtn.className = 'nav-btn px-6 py-3 font-semibold rounded-t-xl bg-blue-600 text-white';
+            
+            if (sectionName === 'history') {
+                renderHistory();
             }
-        }
+        };
 
-        // Get status badge class
-        function getStatusBadge(status) {
-            const badges = {
-                'Baik': 'bg-green-100 text-green-800',
-                'Perlu Perhatian': 'bg-yellow-100 text-yellow-800',
-                'Rusak': 'bg-red-100 text-red-800',
-                'Maintenance': 'bg-blue-100 text-blue-800'
-            };
-            return badges[status] || 'bg-gray-100 text-gray-800';
-        }
-
-        // Format timestamp
-        function formatTimestamp(timestamp) {
-            if (!timestamp) return '-';
-            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-            return date.toLocaleString('id-ID', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
+        // Update dashboard display
+        function updateDashboard() {
+            document.querySelectorAll('.filter-status').forEach(statusDiv => {
+                const mesin = statusDiv.dataset.mesin;
+                const tipe = statusDiv.dataset.tipe;
+                const key = `${mesin}-${tipe}`;
+                const usage = filterData[key] || 0;
+                
+                const usageCount = statusDiv.querySelector('.usage-count');
+                const usageBar = statusDiv.querySelector('.usage-bar');
+                
+                usageCount.textContent = `${usage}/300`;
+                
+                const percentage = (usage / 300) * 100;
+                usageBar.style.width = `${percentage}%`;
+                
+                // Color coding and warning
+                if (usage >= 230) {
+                    usageBar.className = 'usage-bar h-3 rounded-full transition-all duration-300 warning-pulse';
+                    statusDiv.classList.add('bg-yellow-100', 'border-2', 'border-yellow-400', 'rounded-lg', 'p-3');
+                    if (usage >= 230 && usage < 250) {
+                        showToast(`⚠️ Filter ${tipe} ${mesin} mencapai ${usage} batch! Segera ganti!`, 'warning');
+                    }
+                } else if (usage >= 200) {
+                    usageBar.className = 'usage-bar bg-yellow-500 h-3 rounded-full transition-all duration-300';
+                    statusDiv.classList.remove('bg-yellow-100', 'border-2', 'border-yellow-400');
+                } else {
+                    usageBar.className = 'usage-bar bg-green-500 h-3 rounded-full transition-all duration-300';
+                    statusDiv.classList.remove('bg-yellow-100', 'border-2', 'border-yellow-400');
+                }
             });
         }
 
-        // Render table
-        function renderTable(data = allData) {
-            if (data.length === 0) {
-                tableBody.innerHTML = `
-                    <tr id="noDataRow">
-                        <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+        // Add to history
+        async function addToHistory(aktivitas, operator, mesin, tipe, detail = '') {
+            try {
+                await addDoc(collection(db, 'history'), {
+                    aktivitas,
+                    operator,
+                    mesin,
+                    tipe,
+                    detail,
+                    timestamp: serverTimestamp()
+                });
+            } catch (error) {
+                console.error('Error adding to history: ', error);
+            }
+        }
+
+        // Update filter usage
+        async function updateFilterUsage(mesin, tipe, newValue) {
+            const key = `${mesin}-${tipe}`;
+            try {
+                await setDoc(doc(db, 'filterUsage', key), {
+                    mesin,
+                    tipe,
+                    usage: newValue,
+                    lastUpdated: serverTimestamp()
+                });
+            } catch (error) {
+                console.error('Error updating filter usage: ', error);
+            }
+        }
+
+        // Render history table
+        function renderHistory() {
+            const tbody = document.getElementById('historyTableBody');
+            
+            if (historyData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
                             <div class="flex flex-col items-center">
-                                <div class="text-4xl mb-2">📊</div>
-                                <div>Belum ada data. Tambahkan data pertama!</div>
+                                <div class="text-4xl mb-2">📋</div>
+                                <div>Belum ada history aktivitas</div>
                             </div>
                         </td>
                     </tr>
                 `;
-                totalCount.textContent = '0';
                 return;
             }
 
-            const rows = data.map(item => `
-                <tr class="hover:bg-gray-50 transition-colors duration-150">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.bagNumber}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.location}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadge(item.status)}">
-                            ${item.status}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.pressure || '-'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.temperature || '-'}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${formatTimestamp(item.timestamp)}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button onclick="deleteItem('${item.id}')" 
-                                class="text-red-600 hover:text-red-900 transition-colors duration-150">
-                            🗑️ Hapus
-                        </button>
-                    </td>
-                </tr>
-            `).join('');
+            const rows = historyData.map(item => {
+                const aktivitasColor = {
+                    'Pemakaian': 'bg-blue-100 text-blue-800',
+                    'Penggantian': 'bg-green-100 text-green-800',
+                    'Pemusnahan': 'bg-red-100 text-red-800'
+                };
 
-            tableBody.innerHTML = rows;
-            totalCount.textContent = data.length;
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            ${item.timestamp ? item.timestamp.toDate().toLocaleString('id-ID') : '-'}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${aktivitasColor[item.aktivitas] || 'bg-gray-100 text-gray-800'}">
+                                ${item.aktivitas}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.operator}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.mesin}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.tipe}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.detail || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = rows;
         }
 
-        // Filter data
-        function filterData() {
-            const searchTerm = searchInput.value.toLowerCase();
-            const statusTerm = statusFilter.value;
+        // Form submissions
+        document.getElementById('pemakaianForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const operator = formData.get('operator');
+            const mesin = formData.get('mesin');
+            const tipe = formData.get('tipe');
+            
+            const key = `${mesin}-${tipe}`;
+            const currentUsage = filterData[key] || 0;
+            const newUsage = currentUsage + 1;
+            
+            await updateFilterUsage(mesin, tipe, newUsage);
+            await addToHistory('Pemakaian', operator, mesin, tipe, `Batch ke-${newUsage}`);
+            
+            showToast(`Pemakaian filter ${tipe} ${mesin} berhasil dicatat!`);
+            e.target.reset();
+        });
 
-            const filtered = allData.filter(item => {
-                const matchesSearch = !searchTerm || 
-                    item.bagNumber.toLowerCase().includes(searchTerm) ||
-                    item.location.toLowerCase().includes(searchTerm) ||
-                    (item.notes && item.notes.toLowerCase().includes(searchTerm));
-                
-                const matchesStatus = !statusTerm || item.status === statusTerm;
-                
-                return matchesSearch && matchesStatus;
+        document.getElementById('penggantianForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const operator = formData.get('operator');
+            const mesin = formData.get('mesin');
+            const tipe = formData.get('tipe');
+            const vendor = formData.get('vendor');
+            
+            const key = `${mesin}-${tipe}`;
+            const oldUsage = filterData[key] || 0;
+            
+            await updateFilterUsage(mesin, tipe, 0);
+            await addToHistory('Penggantian', operator, mesin, tipe, `Vendor: ${vendor}, Usage sebelumnya: ${oldUsage} batch`);
+            
+            showToast(`Filter ${tipe} ${mesin} berhasil diganti! Counter direset.`);
+            e.target.reset();
+        });
+
+        document.getElementById('musnahForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const operator = formData.get('operator');
+            const mesin = formData.get('mesin');
+            const tipe = formData.get('tipe');
+            
+            const key = `${mesin}-${tipe}`;
+            const currentUsage = filterData[key] || 0;
+            
+            await addToHistory('Pemusnahan', operator, mesin, tipe, `Usage saat dimusnahkan: ${currentUsage} batch`);
+            
+            showToast(`Pemusnahan filter ${tipe} ${mesin} berhasil dicatat!`);
+            e.target.reset();
+        });
+
+        // Setup Firebase listeners
+        function setupListeners() {
+            // Listen to filter usage changes
+            onSnapshot(collection(db, 'filterUsage'), (snapshot) => {
+                filterData = {};
+                snapshot.docs.forEach(doc => {
+                    const data = doc.data();
+                    const key = `${data.mesin}-${data.tipe}`;
+                    filterData[key] = data.usage;
+                });
+                updateDashboard();
             });
 
-            renderTable(filtered);
-        }
-
-        // Add data to Firebase
-        async function addData(data) {
-            try {
-                await addDoc(collection(db, 'filterBags'), {
-                    ...data,
-                    timestamp: serverTimestamp()
+            // Listen to history changes
+            onSnapshot(collection(db, 'history'), (snapshot) => {
+                historyData = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                
+                // Sort by timestamp (newest first)
+                historyData.sort((a, b) => {
+                    if (!a.timestamp) return 1;
+                    if (!b.timestamp) return -1;
+                    return b.timestamp.seconds - a.timestamp.seconds;
                 });
-                showToast('Data berhasil disimpan!');
-            } catch (error) {
-                console.error('Error adding document: ', error);
-                showToast('Gagal menyimpan data!', 'error');
-            }
+            });
         }
-
-        // Delete data from Firebase
-        window.deleteItem = async function(id) {
-            try {
-                await deleteDoc(doc(db, 'filterBags', id));
-                showToast('Data berhasil dihapus!');
-            } catch (error) {
-                console.error('Error deleting document: ', error);
-                showToast('Gagal menghapus data!', 'error');
-            }
-        };
-
-        // Listen to Firebase changes
-        function setupRealtimeListener() {
-            const unsubscribe = onSnapshot(
-                collection(db, 'filterBags'), 
-                (snapshot) => {
-                    updateConnectionStatus(true);
-                    allData = snapshot.docs.map(doc => ({
-                        id: doc.id,
-                        ...doc.data()
-                    }));
-                    
-                    // Sort by timestamp (newest first)
-                    allData.sort((a, b) => {
-                        if (!a.timestamp) return 1;
-                        if (!b.timestamp) return -1;
-                        return b.timestamp.seconds - a.timestamp.seconds;
-                    });
-                    
-                    filterData();
-                },
-                (error) => {
-                    console.error('Error listening to changes: ', error);
-                    updateConnectionStatus(false);
-                    showToast('Koneksi terputus!', 'error');
-                }
-            );
-
-            return unsubscribe;
-        }
-
-        // Form submission
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = new FormData(form);
-            const data = {
-                bagNumber: formData.get('bagNumber'),
-                location: formData.get('location'),
-                status: formData.get('status'),
-                pressure: formData.get('pressure') || null,
-                temperature: formData.get('temperature') || null,
-                notes: formData.get('notes') || ''
-            };
-
-            await addData(data);
-            form.reset();
-        });
-
-        // Filter event listeners
-        searchInput.addEventListener('input', filterData);
-        statusFilter.addEventListener('change', filterData);
-        clearFiltersBtn.addEventListener('click', () => {
-            searchInput.value = '';
-            statusFilter.value = '';
-            filterData();
-        });
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', () => {
-            setupRealtimeListener();
-            
-            // Simulate online users (for demo)
-            setInterval(() => {
-                const count = Math.floor(Math.random() * 5) + 1;
-                onlineCount.textContent = count;
-            }, 10000);
-            
-            onlineCount.textContent = '1';
+            setupListeners();
+            showSection('dashboard');
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98fc747f86bc410c',t:'MTc2MDY2OTA3Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98fc8cadc320fe11',t:'MTc2MDY3MDA2Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
