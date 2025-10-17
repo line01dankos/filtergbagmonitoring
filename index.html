@@ -3,568 +3,905 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Filter Bag Monitoring System</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Monitor Filter Bag</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body {
             box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100%;
         }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.2em;
+            font-weight: 300;
+        }
+        
+        .stats {
+            padding: 30px;
+            background: #f8f9fa;
+        }
+        
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .filter-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .filter-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .filter-card.warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+        
+        .filter-card.critical {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            animation: pulse 1s infinite;
+        }
+        
+        .filter-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .filter-card.warning .filter-header,
+        .filter-card.critical .filter-header {
+            border-bottom-color: rgba(255,255,255,0.3);
+        }
+        
+        .filter-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .filter-card.warning .filter-title,
+        .filter-card.critical .filter-title {
+            color: white;
+        }
+        
+        .filter-type-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+        
+        .filter-type-badge.warna {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .filter-type-badge.putih {
+            background: #f8f9fa;
+            color: #495057;
+            border: 1px solid #dee2e6;
+        }
+        
+        .filter-card.warning .filter-type-badge,
+        .filter-card.critical .filter-type-badge {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .filter-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            text-align: center;
+        }
+        
+        .filter-stat {
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .filter-card.warning .filter-stat,
+        .filter-card.critical .filter-stat {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .filter-stat-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 0;
+        }
+        
+        .filter-card.warning .filter-stat-number,
+        .filter-card.critical .filter-stat-number {
+            color: white;
+        }
+        
+        .filter-stat-label {
+            font-size: 0.8em;
+            color: #7f8c8d;
+            margin: 5px 0 0 0;
+        }
+        
+        .filter-card.warning .filter-stat-label,
+        .filter-card.critical .filter-stat-label {
+            color: rgba(255,255,255,0.9);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+
+        
+        .tabs {
+            display: flex;
+            background: #ecf0f1;
+            border-bottom: 1px solid #bdc3c7;
+        }
+        
+        .tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            color: #7f8c8d;
+            transition: all 0.3s ease;
+        }
+        
+        .tab.active {
+            background: white;
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+        }
+        
+        .tab:hover {
+            background: #d5dbdb;
+        }
+        
+        .tab.active:hover {
+            background: white;
+        }
+        
+        .form-section {
+            padding: 30px;
+            display: none;
+        }
+        
+        .form-section.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+        
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .submit-btn {
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        
+        .submit-btn.usage {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+        
+        .submit-btn.replacement {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+        
+        .submit-btn.destroy {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .submit-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .history-section {
+            padding: 30px;
+            background: #f8f9fa;
+        }
+        
+        .history-title {
+            font-size: 1.5em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .history-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .history-item.usage {
+            border-left: 4px solid #27ae60;
+        }
+        
+        .history-item.replacement {
+            border-left: 4px solid #3498db;
+        }
+        
+        .history-item.destroy {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .history-time {
+            font-size: 0.8em;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        .history-details {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        
+        .history-type {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-right: 10px;
+        }
+        
+        .history-type.usage {
+            background: #d5f4e6;
+            color: #27ae60;
+        }
+        
+        .history-type.replacement {
+            background: #d6eaf8;
+            color: #3498db;
+        }
+        
+        .history-type.destroy {
+            background: #fadbd8;
+            color: #e74c3c;
+        }
+        
         .toast {
-            animation: slideIn 0.3s ease-out;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #27ae60;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
         }
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        
+        .toast.show {
+            transform: translateX(0);
         }
-        .fade-out {
-            animation: fadeOut 0.3s ease-out forwards;
+        
+        .toast.error {
+            background: #e74c3c;
         }
-        @keyframes fadeOut {
-            to { opacity: 0; transform: translateX(100%); }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
         }
-        .warning-pulse {
-            animation: warningPulse 2s infinite;
-        }
-        @keyframes warningPulse {
-            0%, 100% { background-color: #fbbf24; }
-            50% { background-color: #f59e0b; }
+        
+        @media (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .stats {
+                padding: 20px;
+                gap: 15px;
+            }
+            
+            .form-section, .history-section {
+                padding: 20px;
+            }
+            
+            .tabs {
+                flex-wrap: wrap;
+            }
+            
+            .tab {
+                flex: 1;
+                min-width: 120px;
+                font-size: 14px;
+                padding: 12px 15px;
+            }
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
-    <!-- Toast Container -->
-    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
-
-    <div class="container mx-auto px-4 py-8 max-w-7xl">
-        <!-- Header -->
-        <header class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-gray-800 mb-2">Filter Bag Monitoring System</h1>
-            <p class="text-gray-600">Sistem Monitoring Multi-Device Real-time</p>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🏭 Monitor Filter Bag</h1>
+            <p>Sistem Monitoring Pemakaian Filter Lengkap</p>
         </header>
-
-        <!-- Navigation -->
-        <nav class="bg-white rounded-xl shadow-lg mb-8">
-            <div class="flex flex-wrap justify-center">
-                <button onclick="showSection('dashboard')" id="nav-dashboard" 
-                        class="nav-btn px-6 py-3 font-semibold rounded-t-xl bg-blue-600 text-white">
-                    📊 Dashboard
-                </button>
-                <button onclick="showSection('pemakaian')" id="nav-pemakaian" 
-                        class="nav-btn px-6 py-3 font-semibold text-gray-600 hover:bg-gray-100">
-                    📝 Input Pemakaian
-                </button>
-                <button onclick="showSection('penggantian')" id="nav-penggantian" 
-                        class="nav-btn px-6 py-3 font-semibold text-gray-600 hover:bg-gray-100">
-                    🔄 Input Penggantian
-                </button>
-                <button onclick="showSection('musnah')" id="nav-musnah" 
-                        class="nav-btn px-6 py-3 font-semibold text-gray-600 hover:bg-gray-100">
-                    🗑️ Input Musnah
-                </button>
-                <button onclick="showSection('history')" id="nav-history" 
-                        class="nav-btn px-6 py-3 font-semibold text-gray-600 hover:bg-gray-100 rounded-tr-xl">
-                    📋 History
-                </button>
+        
+        <section class="stats">
+            <div class="filter-grid" id="filterGrid">
+                <div class="loading">Memuat data filter...</div>
             </div>
-        </nav>
-
-        <!-- Dashboard Section -->
-        <div id="dashboard-section" class="section">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <!-- FBD Y 60 -->
-                <div class="bg-white rounded-xl shadow-lg p-6">
-                    <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">FBD Y 60</h3>
-                    <div class="space-y-4">
-                        <div class="filter-status" data-mesin="FBD Y 60" data-tipe="warna">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="font-medium">Filter Warna</span>
-                                <span class="usage-count text-lg font-bold">0/300</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-3">
-                                <div class="usage-bar bg-green-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div class="filter-status" data-mesin="FBD Y 60" data-tipe="putih">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="font-medium">Filter Putih</span>
-                                <span class="usage-count text-lg font-bold">0/300</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-3">
-                                <div class="usage-bar bg-green-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
+        </section>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('usage')">📝 Input Pemakaian</button>
+            <button class="tab" onclick="switchTab('replacement')">🔄 Input Penggantian</button>
+            <button class="tab" onclick="switchTab('destroy')">🗑️ Input Musnah</button>
+            <button class="tab" onclick="switchTab('history')">📋 History</button>
+        </div>
+        
+        <!-- Input Pemakaian -->
+        <section class="form-section active" id="usage-section">
+            <form id="usageForm">
+                <div class="form-group">
+                    <label for="usageOperator">Nama Operator:</label>
+                    <input type="text" id="usageOperator" name="operator" required>
                 </div>
-
-                <!-- FBD Y 150 -->
-                <div class="bg-white rounded-xl shadow-lg p-6">
-                    <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">FBD Y 150</h3>
-                    <div class="space-y-4">
-                        <div class="filter-status" data-mesin="FBD Y 150" data-tipe="warna">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="font-medium">Filter Warna</span>
-                                <span class="usage-count text-lg font-bold">0/300</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-3">
-                                <div class="usage-bar bg-green-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div class="filter-status" data-mesin="FBD Y 150" data-tipe="putih">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="font-medium">Filter Putih</span>
-                                <span class="usage-count text-lg font-bold">0/300</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-3">
-                                <div class="usage-bar bg-green-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
+                
+                <div class="form-group">
+                    <label for="usageMachine">Mesin:</label>
+                    <select id="usageMachine" name="machine" required>
+                        <option value="">Pilih Mesin</option>
+                        <option value="FBD Y 60">FBD Y 60</option>
+                        <option value="FBD Y 150">FBD Y 150</option>
+                        <option value="FBD Glatt">FBD Glatt</option>
+                    </select>
                 </div>
-
-                <!-- FBD Glatt -->
-                <div class="bg-white rounded-xl shadow-lg p-6">
-                    <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">FBD Glatt</h3>
-                    <div class="space-y-4">
-                        <div class="filter-status" data-mesin="FBD Glatt" data-tipe="warna">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="font-medium">Filter Warna</span>
-                                <span class="usage-count text-lg font-bold">0/300</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-3">
-                                <div class="usage-bar bg-green-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        <div class="filter-status" data-mesin="FBD Glatt" data-tipe="putih">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="font-medium">Filter Putih</span>
-                                <span class="usage-count text-lg font-bold">0/300</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-3">
-                                <div class="usage-bar bg-green-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
-                            </div>
-                        </div>
-                    </div>
+                
+                <div class="form-group">
+                    <label for="usageFilterType">Tipe Filter:</label>
+                    <select id="usageFilterType" name="filterType" required>
+                        <option value="">Pilih Tipe</option>
+                        <option value="warna">Warna</option>
+                        <option value="putih">Putih</option>
+                    </select>
                 </div>
-            </div>
-        </div>
-
-        <!-- Input Pemakaian Section -->
-        <div id="pemakaian-section" class="section hidden">
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-2xl font-semibold text-gray-800 mb-6">Input Pemakaian Filter</h2>
-                <form id="pemakaianForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="pemakaian-operator" class="block text-sm font-medium text-gray-700 mb-2">Nama Operator</label>
-                        <input type="text" id="pemakaian-operator" name="operator" required 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    </div>
-                    <div>
-                        <label for="pemakaian-mesin" class="block text-sm font-medium text-gray-700 mb-2">Mesin</label>
-                        <select id="pemakaian-mesin" name="mesin" required 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="">Pilih Mesin</option>
-                            <option value="FBD Y 60">FBD Y 60</option>
-                            <option value="FBD Y 150">FBD Y 150</option>
-                            <option value="FBD Glatt">FBD Glatt</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="pemakaian-tipe" class="block text-sm font-medium text-gray-700 mb-2">Tipe Filter</label>
-                        <select id="pemakaian-tipe" name="tipe" required 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="">Pilih Tipe</option>
-                            <option value="warna">Warna</option>
-                            <option value="putih">Putih</option>
-                        </select>
-                    </div>
-                    <div class="flex items-end">
-                        <button type="submit" 
-                                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
-                            📝 Catat Pemakaian
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Input Penggantian Section -->
-        <div id="penggantian-section" class="section hidden">
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-2xl font-semibold text-gray-800 mb-6">Input Penggantian Filter</h2>
-                <form id="penggantianForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="penggantian-operator" class="block text-sm font-medium text-gray-700 mb-2">Nama Operator</label>
-                        <input type="text" id="penggantian-operator" name="operator" required 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    </div>
-                    <div>
-                        <label for="penggantian-mesin" class="block text-sm font-medium text-gray-700 mb-2">Mesin</label>
-                        <select id="penggantian-mesin" name="mesin" required 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="">Pilih Mesin</option>
-                            <option value="FBD Y 60">FBD Y 60</option>
-                            <option value="FBD Y 150">FBD Y 150</option>
-                            <option value="FBD Glatt">FBD Glatt</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="penggantian-tipe" class="block text-sm font-medium text-gray-700 mb-2">Tipe Filter</label>
-                        <select id="penggantian-tipe" name="tipe" required 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="">Pilih Tipe</option>
-                            <option value="warna">Warna</option>
-                            <option value="putih">Putih</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="penggantian-vendor" class="block text-sm font-medium text-gray-700 mb-2">Nama Vendor</label>
-                        <input type="text" id="penggantian-vendor" name="vendor" required 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    </div>
-                    <div class="md:col-span-2">
-                        <button type="submit" 
-                                class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
-                            🔄 Catat Penggantian
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Input Musnah Section -->
-        <div id="musnah-section" class="section hidden">
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-2xl font-semibold text-gray-800 mb-6">Input Pemusnahan Filter</h2>
-                <form id="musnahForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label for="musnah-operator" class="block text-sm font-medium text-gray-700 mb-2">Nama Operator</label>
-                        <input type="text" id="musnah-operator" name="operator" required 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                    </div>
-                    <div>
-                        <label for="musnah-mesin" class="block text-sm font-medium text-gray-700 mb-2">Mesin</label>
-                        <select id="musnah-mesin" name="mesin" required 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="">Pilih Mesin</option>
-                            <option value="FBD Y 60">FBD Y 60</option>
-                            <option value="FBD Y 150">FBD Y 150</option>
-                            <option value="FBD Glatt">FBD Glatt</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="musnah-tipe" class="block text-sm font-medium text-gray-700 mb-2">Tipe Filter</label>
-                        <select id="musnah-tipe" name="tipe" required 
-                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                            <option value="">Pilih Tipe</option>
-                            <option value="warna">Warna</option>
-                            <option value="putih">Putih</option>
-                        </select>
-                    </div>
-                    <div class="flex items-end">
-                        <button type="submit" 
-                                class="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200">
-                            🗑️ Catat Pemusnahan
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- History Section -->
-        <div id="history-section" class="section hidden">
-            <div class="bg-white rounded-xl shadow-lg p-6">
-                <h2 class="text-2xl font-semibold text-gray-800 mb-6">History Aktivitas</h2>
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Waktu</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aktivitas</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Operator</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mesin</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe Filter</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Detail</th>
-                            </tr>
-                        </thead>
-                        <tbody id="historyTableBody" class="bg-white divide-y divide-gray-200">
-                            <tr>
-                                <td colspan="6" class="px-6 py-8 text-center text-gray-500">
-                                    <div class="flex flex-col items-center">
-                                        <div class="text-4xl mb-2">📋</div>
-                                        <div>Belum ada history aktivitas</div>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                
+                <button type="submit" class="submit-btn usage" id="usageSubmitBtn">
+                    📝 Catat Pemakaian
+                </button>
+            </form>
+        </section>
+        
+        <!-- Input Penggantian -->
+        <section class="form-section" id="replacement-section">
+            <form id="replacementForm">
+                <div class="form-group">
+                    <label for="replacementOperator">Nama Operator:</label>
+                    <input type="text" id="replacementOperator" name="operator" required>
                 </div>
+                
+                <div class="form-group">
+                    <label for="replacementMachine">Mesin:</label>
+                    <select id="replacementMachine" name="machine" required>
+                        <option value="">Pilih Mesin</option>
+                        <option value="FBD Y 60">FBD Y 60</option>
+                        <option value="FBD Y 150">FBD Y 150</option>
+                        <option value="FBD Glatt">FBD Glatt</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="replacementFilterType">Tipe Filter:</label>
+                    <select id="replacementFilterType" name="filterType" required>
+                        <option value="">Pilih Tipe</option>
+                        <option value="warna">Warna</option>
+                        <option value="putih">Putih</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="vendor">Nama Vendor:</label>
+                    <input type="text" id="vendor" name="vendor" required>
+                </div>
+                
+                <button type="submit" class="submit-btn replacement" id="replacementSubmitBtn">
+                    🔄 Catat Penggantian
+                </button>
+            </form>
+        </section>
+        
+        <!-- Input Musnah -->
+        <section class="form-section" id="destroy-section">
+            <form id="destroyForm">
+                <div class="form-group">
+                    <label for="destroyOperator">Nama Operator:</label>
+                    <input type="text" id="destroyOperator" name="operator" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="destroyMachine">Mesin:</label>
+                    <select id="destroyMachine" name="machine" required>
+                        <option value="">Pilih Mesin</option>
+                        <option value="FBD Y 60">FBD Y 60</option>
+                        <option value="FBD Y 150">FBD Y 150</option>
+                        <option value="FBD Glatt">FBD Glatt</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="destroyFilterType">Tipe Filter:</label>
+                    <select id="destroyFilterType" name="filterType" required>
+                        <option value="">Pilih Tipe</option>
+                        <option value="warna">Warna</option>
+                        <option value="putih">Putih</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="submit-btn destroy" id="destroySubmitBtn">
+                    🗑️ Catat Pemusnahan
+                </button>
+            </form>
+        </section>
+        
+        <!-- History -->
+        <section class="form-section" id="history-section">
+            <h2 class="history-title">📋 Riwayat Aktivitas</h2>
+            <div id="historyContainer">
+                <div class="loading">Memuat riwayat...</div>
             </div>
-        </div>
+        </section>
     </div>
+    
+    <div id="toast" class="toast"></div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        // Import Firebase modules
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getFirestore, collection, addDoc, onSnapshot, doc, setDoc, getDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
-
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyAInwF88wMhtqPebcj61HZzBFJX8vCyx8E",
-            authDomain: "filterbagmonitoring.firebaseapp.com",
-            projectId: "filterbagmonitoring",
-            storageBucket: "filterbagmonitoring.firebasestorage.app",
-            messagingSenderId: "705867194223",
-            appId: "1:705867194223:web:9cd69e36a8eed96d0b929a",
-            measurementId: "G-XRC6LVN6GH"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // Global variables
-        let filterData = {};
-        let historyData = [];
-
-        // Toast notification function
-        function showToast(message, type = 'success') {
-            const toast = document.createElement('div');
-            toast.className = `toast px-6 py-3 rounded-lg text-white font-medium shadow-lg ${
-                type === 'success' ? 'bg-green-500' : 
-                type === 'error' ? 'bg-red-500' : 
-                type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
-            }`;
-            toast.textContent = message;
-            
-            document.getElementById('toastContainer').appendChild(toast);
-            
-            setTimeout(() => {
-                toast.classList.add('fade-out');
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
-
-        // Navigation functions
-        window.showSection = function(sectionName) {
-            // Hide all sections
-            document.querySelectorAll('.section').forEach(section => {
-                section.classList.add('hidden');
-            });
-            
-            // Show selected section
-            document.getElementById(sectionName + '-section').classList.remove('hidden');
-            
-            // Update navigation buttons
-            document.querySelectorAll('.nav-btn').forEach(btn => {
-                btn.className = 'nav-btn px-6 py-3 font-semibold text-gray-600 hover:bg-gray-100';
-            });
-            
-            const activeBtn = document.getElementById('nav-' + sectionName);
-            activeBtn.className = 'nav-btn px-6 py-3 font-semibold rounded-t-xl bg-blue-600 text-white';
-            
-            if (sectionName === 'history') {
-                renderHistory();
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://ppaewszxnndnlnjfvdkl.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwYWV3c3p4bm5kbmxuamZ2ZGtsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2Nzc5MjIsImV4cCI6MjA3NjI1MzkyMn0.rpfnaRHlJg0C5Y4QvHXmAbIo9a7l5VBTFJfzrOckEDY';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Constants
+        const MAX_FILTERS = 300;
+        const WARNING_THRESHOLD = 230;
+        
+        // DOM Elements
+        const filterGrid = document.getElementById('filterGrid');
+        const historyContainer = document.getElementById('historyContainer');
+        const toast = document.getElementById('toast');
+        
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+            setupRealtimeSubscription();
+            setupForms();
+        });
+        
+        async function initializeApp() {
+            try {
+                await loadDashboardData();
+                await loadHistory();
+            } catch (error) {
+                console.error('Error initializing app:', error);
+                showToast('Error memuat data', 'error');
             }
-        };
-
-        // Update dashboard display
-        function updateDashboard() {
-            document.querySelectorAll('.filter-status').forEach(statusDiv => {
-                const mesin = statusDiv.dataset.mesin;
-                const tipe = statusDiv.dataset.tipe;
-                const key = `${mesin}-${tipe}`;
-                const usage = filterData[key] || 0;
+        }
+        
+        async function loadDashboardData() {
+            try {
+                const { data: filterData, error } = await supabase
+                    .from('filter_counters')
+                    .select('*');
                 
-                const usageCount = statusDiv.querySelector('.usage-count');
-                const usageBar = statusDiv.querySelector('.usage-bar');
-                
-                usageCount.textContent = `${usage}/300`;
-                
-                const percentage = (usage / 300) * 100;
-                usageBar.style.width = `${percentage}%`;
-                
-                // Color coding and warning
-                if (usage >= 230) {
-                    usageBar.className = 'usage-bar h-3 rounded-full transition-all duration-300 warning-pulse';
-                    statusDiv.classList.add('bg-yellow-100', 'border-2', 'border-yellow-400', 'rounded-lg', 'p-3');
-                    if (usage >= 230 && usage < 250) {
-                        showToast(`⚠️ Filter ${tipe} ${mesin} mencapai ${usage} batch! Segera ganti!`, 'warning');
-                    }
-                } else if (usage >= 200) {
-                    usageBar.className = 'usage-bar bg-yellow-500 h-3 rounded-full transition-all duration-300';
-                    statusDiv.classList.remove('bg-yellow-100', 'border-2', 'border-yellow-400');
-                } else {
-                    usageBar.className = 'usage-bar bg-green-500 h-3 rounded-full transition-all duration-300';
-                    statusDiv.classList.remove('bg-yellow-100', 'border-2', 'border-yellow-400');
+                if (error && error.code !== 'PGRST116') {
+                    throw error;
                 }
-            });
-        }
-
-        // Add to history
-        async function addToHistory(aktivitas, operator, mesin, tipe, detail = '') {
-            try {
-                await addDoc(collection(db, 'history'), {
-                    aktivitas,
-                    operator,
-                    mesin,
-                    tipe,
-                    detail,
-                    timestamp: serverTimestamp()
-                });
+                
+                updateDashboard(filterData || []);
             } catch (error) {
-                console.error('Error adding to history: ', error);
+                console.error('Error loading dashboard:', error);
+                updateDashboard([]);
             }
         }
-
-        // Update filter usage
-        async function updateFilterUsage(mesin, tipe, newValue) {
-            const key = `${mesin}-${tipe}`;
-            try {
-                await setDoc(doc(db, 'filterUsage', key), {
-                    mesin,
-                    tipe,
-                    usage: newValue,
-                    lastUpdated: serverTimestamp()
-                });
-            } catch (error) {
-                console.error('Error updating filter usage: ', error);
-            }
-        }
-
-        // Render history table
-        function renderHistory() {
-            const tbody = document.getElementById('historyTableBody');
+        
+        function updateDashboard(filterData) {
+            const machines = ['FBD Y 60', 'FBD Y 150', 'FBD Glatt'];
+            const filterTypes = ['warna', 'putih'];
             
-            if (historyData.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">
-                            <div class="flex flex-col items-center">
-                                <div class="text-4xl mb-2">📋</div>
-                                <div>Belum ada history aktivitas</div>
+            let html = '';
+            
+            machines.forEach(machine => {
+                filterTypes.forEach(filterType => {
+                    const filterKey = `${machine}_${filterType}`;
+                    const filterInfo = filterData.find(f => f.machine === machine && f.filter_type === filterType);
+                    const usage = filterInfo ? filterInfo.usage_count : 0;
+                    
+                    const remaining = Math.max(0, MAX_FILTERS - usage);
+                    const percentage = Math.round((usage / MAX_FILTERS) * 100);
+                    
+                    let cardClass = 'filter-card';
+                    if (usage >= WARNING_THRESHOLD) {
+                        if (usage >= MAX_FILTERS) {
+                            cardClass += ' critical';
+                        } else {
+                            cardClass += ' warning';
+                        }
+                    }
+                    
+                    html += `
+                        <div class="${cardClass}">
+                            <div class="filter-header">
+                                <div class="filter-title">${machine}</div>
+                                <div class="filter-type-badge ${filterType}">${filterType.toUpperCase()}</div>
                             </div>
-                        </td>
-                    </tr>
-                `;
+                            <div class="filter-stats">
+                                <div class="filter-stat">
+                                    <div class="filter-stat-number">${usage}</div>
+                                    <div class="filter-stat-label">Terpakai</div>
+                                </div>
+                                <div class="filter-stat">
+                                    <div class="filter-stat-number">${remaining}</div>
+                                    <div class="filter-stat-label">Sisa</div>
+                                </div>
+                                <div class="filter-stat">
+                                    <div class="filter-stat-number">${percentage}%</div>
+                                    <div class="filter-stat-label">Persentase</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+            
+            filterGrid.innerHTML = html;
+        }
+        
+        async function loadHistory() {
+            try {
+                const { data: historyData, error } = await supabase
+                    .from('activity_history')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+                
+                if (error && error.code !== 'PGRST116') {
+                    throw error;
+                }
+                
+                displayHistory(historyData || []);
+            } catch (error) {
+                console.error('Error loading history:', error);
+                historyContainer.innerHTML = '<div class="loading">Error memuat riwayat</div>';
+            }
+        }
+        
+        function displayHistory(historyData) {
+            if (historyData.length === 0) {
+                historyContainer.innerHTML = '<div class="loading">Belum ada riwayat aktivitas</div>';
                 return;
             }
-
-            const rows = historyData.map(item => {
-                const aktivitasColor = {
-                    'Pemakaian': 'bg-blue-100 text-blue-800',
-                    'Penggantian': 'bg-green-100 text-green-800',
-                    'Pemusnahan': 'bg-red-100 text-red-800'
-                };
-
+            
+            const historyHTML = historyData.map(item => {
+                const date = new Date(item.created_at);
+                const timeStr = date.toLocaleString('id-ID', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                let typeLabel = '';
+                let details = '';
+                
+                switch(item.activity_type) {
+                    case 'usage':
+                        typeLabel = 'PEMAKAIAN';
+                        details = `<strong>${item.operator}</strong> menggunakan filter ${item.filter_type} pada mesin <strong>${item.machine}</strong>`;
+                        break;
+                    case 'replacement':
+                        typeLabel = 'PENGGANTIAN';
+                        details = `<strong>${item.operator}</strong> mengganti filter ${item.filter_type} pada mesin <strong>${item.machine}</strong> dengan vendor <strong>${item.vendor}</strong>`;
+                        break;
+                    case 'destroy':
+                        typeLabel = 'PEMUSNAHAN';
+                        details = `<strong>${item.operator}</strong> memusnahkan filter ${item.filter_type} pada mesin <strong>${item.machine}</strong>`;
+                        break;
+                }
+                
                 return `
-                    <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${item.timestamp ? item.timestamp.toDate().toLocaleString('id-ID') : '-'}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full ${aktivitasColor[item.aktivitas] || 'bg-gray-100 text-gray-800'}">
-                                ${item.aktivitas}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.operator}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.mesin}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${item.tipe}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.detail || '-'}</td>
-                    </tr>
+                    <div class="history-item ${item.activity_type}">
+                        <div class="history-time">${timeStr}</div>
+                        <div class="history-details">
+                            <span class="history-type ${item.activity_type}">${typeLabel}</span>
+                            ${details}
+                        </div>
+                    </div>
                 `;
             }).join('');
-
-            tbody.innerHTML = rows;
+            
+            historyContainer.innerHTML = historyHTML;
         }
-
-        // Form submissions
-        document.getElementById('pemakaianForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const operator = formData.get('operator');
-            const mesin = formData.get('mesin');
-            const tipe = formData.get('tipe');
+        
+        function setupForms() {
+            // Usage Form
+            document.getElementById('usageForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await handleFormSubmit(e, 'usage');
+            });
             
-            const key = `${mesin}-${tipe}`;
-            const currentUsage = filterData[key] || 0;
-            const newUsage = currentUsage + 1;
+            // Replacement Form
+            document.getElementById('replacementForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await handleFormSubmit(e, 'replacement');
+            });
             
-            await updateFilterUsage(mesin, tipe, newUsage);
-            await addToHistory('Pemakaian', operator, mesin, tipe, `Batch ke-${newUsage}`);
+            // Destroy Form
+            document.getElementById('destroyForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await handleFormSubmit(e, 'destroy');
+            });
+        }
+        
+        async function handleFormSubmit(e, type) {
+            const form = e.target;
+            const formData = new FormData(form);
+            const submitBtn = form.querySelector('button[type="submit"]');
             
-            showToast(`Pemakaian filter ${tipe} ${mesin} berhasil dicatat!`);
-            e.target.reset();
-        });
-
-        document.getElementById('penggantianForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const operator = formData.get('operator');
-            const mesin = formData.get('mesin');
-            const tipe = formData.get('tipe');
+            const operator = formData.get('operator').trim();
+            const machine = formData.get('machine');
+            const filterType = formData.get('filterType');
             const vendor = formData.get('vendor');
             
-            const key = `${mesin}-${tipe}`;
-            const oldUsage = filterData[key] || 0;
+            if (!operator || !machine || !filterType) {
+                showToast('Mohon lengkapi semua field', 'error');
+                return;
+            }
             
-            await updateFilterUsage(mesin, tipe, 0);
-            await addToHistory('Penggantian', operator, mesin, tipe, `Vendor: ${vendor}, Usage sebelumnya: ${oldUsage} batch`);
+            if (type === 'replacement' && !vendor) {
+                showToast('Nama vendor harus diisi', 'error');
+                return;
+            }
             
-            showToast(`Filter ${tipe} ${mesin} berhasil diganti! Counter direset.`);
-            e.target.reset();
-        });
-
-        document.getElementById('musnahForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const operator = formData.get('operator');
-            const mesin = formData.get('mesin');
-            const tipe = formData.get('tipe');
+            submitBtn.disabled = true;
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '⏳ Menyimpan...';
             
-            const key = `${mesin}-${tipe}`;
-            const currentUsage = filterData[key] || 0;
-            
-            await addToHistory('Pemusnahan', operator, mesin, tipe, `Usage saat dimusnahkan: ${currentUsage} batch`);
-            
-            showToast(`Pemusnahan filter ${tipe} ${mesin} berhasil dicatat!`);
-            e.target.reset();
-        });
-
-        // Setup Firebase listeners
-        function setupListeners() {
-            // Listen to filter usage changes
-            onSnapshot(collection(db, 'filterUsage'), (snapshot) => {
-                filterData = {};
-                snapshot.docs.forEach(doc => {
-                    const data = doc.data();
-                    const key = `${data.mesin}-${data.tipe}`;
-                    filterData[key] = data.usage;
-                });
-                updateDashboard();
-            });
-
-            // Listen to history changes
-            onSnapshot(collection(db, 'history'), (snapshot) => {
-                historyData = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
+            try {
+                // Add to history
+                const historyData = {
+                    activity_type: type,
+                    operator: operator,
+                    machine: machine,
+                    filter_type: filterType,
+                    created_at: new Date().toISOString()
+                };
                 
-                // Sort by timestamp (newest first)
-                historyData.sort((a, b) => {
-                    if (!a.timestamp) return 1;
-                    if (!b.timestamp) return -1;
-                    return b.timestamp.seconds - a.timestamp.seconds;
-                });
-            });
+                if (type === 'replacement') {
+                    historyData.vendor = vendor;
+                }
+                
+                const { error: historyError } = await supabase
+                    .from('activity_history')
+                    .insert([historyData]);
+                
+                if (historyError) throw historyError;
+                
+                // Update usage counter
+                await updateUsageCounter(type, machine, filterType);
+                
+                // Reset form
+                form.reset();
+                
+                // Reload data
+                await loadDashboardData();
+                await loadHistory();
+                
+                let message = '';
+                switch(type) {
+                    case 'usage':
+                        message = '✅ Pemakaian berhasil dicatat!';
+                        break;
+                    case 'replacement':
+                        message = '✅ Penggantian berhasil dicatat! Counter direset.';
+                        break;
+                    case 'destroy':
+                        message = '✅ Pemusnahan berhasil dicatat!';
+                        break;
+                }
+                
+                showToast(message);
+                
+            } catch (error) {
+                console.error('Error saving data:', error);
+                showToast('❌ Error menyimpan data: ' + error.message, 'error');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
         }
-
-        // Initialize app
-        document.addEventListener('DOMContentLoaded', () => {
-            setupListeners();
-            showSection('dashboard');
-        });
+        
+        async function updateUsageCounter(type, machine, filterType) {
+            const { data: currentFilter, error: fetchError } = await supabase
+                .from('filter_counters')
+                .select('*')
+                .eq('machine', machine)
+                .eq('filter_type', filterType)
+                .single();
+            
+            let newCount = 0;
+            
+            if (fetchError && fetchError.code !== 'PGRST116') {
+                throw fetchError;
+            }
+            
+            if (type === 'usage') {
+                // Increment usage
+                newCount = currentFilter ? (currentFilter.usage_count || 0) + 1 : 1;
+            } else if (type === 'replacement') {
+                // Reset to 0 on replacement
+                newCount = 0;
+            } else if (type === 'destroy') {
+                // Keep current count for destroy
+                newCount = currentFilter ? (currentFilter.usage_count || 0) : 0;
+            }
+            
+            if (currentFilter) {
+                const { error: updateError } = await supabase
+                    .from('filter_counters')
+                    .update({ usage_count: newCount })
+                    .eq('machine', machine)
+                    .eq('filter_type', filterType);
+                
+                if (updateError) throw updateError;
+            } else {
+                const { error: insertError } = await supabase
+                    .from('filter_counters')
+                    .insert([{ 
+                        machine: machine, 
+                        filter_type: filterType, 
+                        usage_count: newCount 
+                    }]);
+                
+                if (insertError) throw insertError;
+            }
+        }
+        
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update sections
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(tabName + '-section').classList.add('active');
+            
+            // Load history if history tab is selected
+            if (tabName === 'history') {
+                loadHistory();
+            }
+        }
+        
+        function setupRealtimeSubscription() {
+            supabase
+                .channel('activity_changes')
+                .on('postgres_changes', 
+                    { event: 'INSERT', schema: 'public', table: 'activity_history' }, 
+                    (payload) => {
+                        loadHistory();
+                    }
+                )
+                .subscribe();
+            
+            supabase
+                .channel('filter_changes')
+                .on('postgres_changes', 
+                    { event: '*', schema: 'public', table: 'filter_counters' }, 
+                    (payload) => {
+                        loadDashboardData();
+                    }
+                )
+                .subscribe();
+        }
+        
+        function showToast(message, type = 'success') {
+            toast.textContent = message;
+            toast.className = `toast ${type}`;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98fc8cadc320fe11',t:'MTc2MDY3MDA2Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98fe325bd22781a4',t:'MTc2MDY4NzMzOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
