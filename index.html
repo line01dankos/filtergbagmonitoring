@@ -49,11 +49,13 @@ function switchTab(tabName) {
     // Update tab buttons
     document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.remove('active');
-        tab.removeAttribute('onclick');
     });
     
-    // Activate clicked tab
-    event.target.classList.add('active');
+    // Find and activate clicked tab
+    const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
+    if (activeTab) {
+        activeTab.classList.add('active');
+    }
     
     // Update sections
     document.querySelectorAll('.form-section').forEach(section => {
@@ -91,6 +93,8 @@ async function loadDashboardData() {
 
 function updateDashboard(filterData) {
     const filterGrid = document.getElementById('filterGrid');
+    if (!filterGrid) return;
+    
     const machines = ['FBD Y 60', 'FBD Y 150', 'FBD Glatt'];
     const filterTypes = ['warna', 'putih'];
     
@@ -142,8 +146,10 @@ function updateDashboard(filterData) {
 }
 
 async function loadHistory() {
+    const historyContainer = document.getElementById('historyContainer');
+    if (!historyContainer) return;
+    
     try {
-        const historyContainer = document.getElementById('historyContainer');
         historyContainer.innerHTML = '<div class="loading">Memuat riwayat...</div>';
         
         const { data: historyData, error } = await supabaseClient
@@ -165,6 +171,7 @@ async function loadHistory() {
 
 function displayHistory(historyData) {
     const historyContainer = document.getElementById('historyContainer');
+    if (!historyContainer) return;
     
     if (historyData.length === 0) {
         historyContainer.innerHTML = '<div class="loading">Belum ada riwayat aktivitas</div>';
