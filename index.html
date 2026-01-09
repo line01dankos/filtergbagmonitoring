@@ -1,907 +1,418 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitor Filter Bag</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>
-        body {
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100%;
-        }
-        
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #2c3e50, #3498db);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            margin: 0;
-            font-size: 2.2em;
-            font-weight: 300;
-        }
-        
-        .stats {
-            padding: 30px;
-            background: #f8f9fa;
-        }
-        
-        .filter-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-        }
-        
-        .filter-card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-        
-        .filter-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .filter-card.warning {
-            background: linear-gradient(135deg, #f39c12, #e67e22);
-            color: white;
-            animation: pulse 2s infinite;
-        }
-        
-        .filter-card.critical {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            color: white;
-            animation: pulse 1s infinite;
-        }
-        
-        .filter-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #ecf0f1;
-        }
-        
-        .filter-card.warning .filter-header,
-        .filter-card.critical .filter-header {
-            border-bottom-color: rgba(255,255,255,0.3);
-        }
-        
-        .filter-title {
-            font-size: 1.1em;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        
-        .filter-card.warning .filter-title,
-        .filter-card.critical .filter-title {
-            color: white;
-        }
-        
-        .filter-type-badge {
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: 600;
-        }
-        
-        .filter-type-badge.warna {
-            background: #fff3cd;
-            color: #856404;
-        }
-        
-        .filter-type-badge.putih {
-            background: #f8f9fa;
-            color: #495057;
-            border: 1px solid #dee2e6;
-        }
-        
-        .filter-card.warning .filter-type-badge,
-        .filter-card.critical .filter-type-badge {
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.3);
-        }
-        
-        .filter-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
-            text-align: center;
-        }
-        
-        .filter-stat {
-            padding: 10px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-        
-        .filter-card.warning .filter-stat,
-        .filter-card.critical .filter-stat {
-            background: rgba(255,255,255,0.1);
-        }
-        
-        .filter-stat-number {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #2c3e50;
-            margin: 0;
-        }
-        
-        .filter-card.warning .filter-stat-number,
-        .filter-card.critical .filter-stat-number {
-            color: white;
-        }
-        
-        .filter-stat-label {
-            font-size: 0.8em;
-            color: #7f8c8d;
-            margin: 5px 0 0 0;
-        }
-        
-        .filter-card.warning .filter-stat-label,
-        .filter-card.critical .filter-stat-label {
-            color: rgba(255,255,255,0.9);
-        }
-        
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        
+// Supabase Configuration
+const SUPABASE_URL = 'https://ppaewszxnndnlnjfvdkl.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwYWV3c3p4bm5kbmxuamZ2ZGtsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2Nzc5MjIsImV4cCI6MjA3NjI1MzkyMn0.rpfnaRHlJg0C5Y4QvHXmAbIo9a7l5VBTFJfzrOckEDY';
 
-        
-        .tabs {
-            display: flex;
-            background: #ecf0f1;
-            border-bottom: 1px solid #bdc3c7;
-        }
-        
-        .tab {
-            flex: 1;
-            padding: 15px 20px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            color: #7f8c8d;
-            transition: all 0.3s ease;
-        }
-        
-        .tab.active {
-            background: white;
-            color: #2c3e50;
-            border-bottom: 3px solid #3498db;
-        }
-        
-        .tab:hover {
-            background: #d5dbdb;
-        }
-        
-        .tab.active:hover {
-            background: white;
-        }
-        
-        .form-section {
-            padding: 30px;
-            display: none;
-        }
-        
-        .form-section.active {
-            display: block;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        
-        .form-group input, .form-group select {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s ease;
-            box-sizing: border-box;
-        }
-        
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-        
-        .submit-btn {
-            color: white;
-            padding: 15px 30px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.3s ease;
-        }
-        
-        .submit-btn.usage {
-            background: linear-gradient(135deg, #27ae60, #2ecc71);
-        }
-        
-        .submit-btn.replacement {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-        }
-        
-        .submit-btn.destroy {
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-        }
-        
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-        }
-        
-        .submit-btn:disabled {
-            background: #bdc3c7;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .history-section {
-            padding: 30px;
-            background: #f8f9fa;
-        }
-        
-        .history-title {
-            font-size: 1.5em;
-            color: #2c3e50;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
-        .history-item {
-            background: white;
-            padding: 15px;
-            margin-bottom: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        
-        .history-item.usage {
-            border-left: 4px solid #27ae60;
-        }
-        
-        .history-item.replacement {
-            border-left: 4px solid #3498db;
-        }
-        
-        .history-item.destroy {
-            border-left: 4px solid #e74c3c;
-        }
-        
-        .history-time {
-            font-size: 0.8em;
-            color: #7f8c8d;
-            margin-bottom: 5px;
-        }
-        
-        .history-details {
-            color: #2c3e50;
-            font-weight: 500;
-        }
-        
-        .history-type {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.8em;
-            font-weight: 600;
-            margin-right: 10px;
-        }
-        
-        .history-type.usage {
-            background: #d5f4e6;
-            color: #27ae60;
-        }
-        
-        .history-type.replacement {
-            background: #d6eaf8;
-            color: #3498db;
-        }
-        
-        .history-type.destroy {
-            background: #fadbd8;
-            color: #e74c3c;
-        }
-        
-        .toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #27ae60;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            transform: translateX(400px);
-            transition: transform 0.3s ease;
-            z-index: 1000;
-        }
-        
-        .toast.show {
-            transform: translateX(0);
-        }
-        
-        .toast.error {
-            background: #e74c3c;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 20px;
-            color: #7f8c8d;
-        }
-        
-        @media (max-width: 600px) {
-            .container {
-                margin: 10px;
-                border-radius: 10px;
-            }
-            
-            .header {
-                padding: 20px;
-            }
-            
-            .header h1 {
-                font-size: 1.8em;
-            }
-            
-            .stats {
-                padding: 20px;
-                gap: 15px;
-            }
-            
-            .form-section, .history-section {
-                padding: 20px;
-            }
-            
-            .tabs {
-                flex-wrap: wrap;
-            }
-            
-            .tab {
-                flex: 1;
-                min-width: 120px;
-                font-size: 14px;
-                padding: 12px 15px;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <header class="header">
-            <h1>🏭 Monitor Filter Bag</h1>
-            <p>Sistem Monitoring Pemakaian Filter Lengkap</p>
-        </header>
-        
-        <section class="stats">
-            <div class="filter-grid" id="filterGrid">
-                <div class="loading">Memuat data filter...</div>
-            </div>
-        </section>
-        
-        <div class="tabs">
-            <button class="tab active" onclick="switchTab('usage')">📝 Input Pemakaian</button>
-            <button class="tab" onclick="switchTab('replacement')">🔄 Input Penggantian</button>
-            <button class="tab" onclick="switchTab('destroy')">🗑️ Input Musnah</button>
-            <button class="tab" onclick="switchTab('history')">📋 History</button>
-        </div>
-        
-        <!-- Input Pemakaian -->
-        <section class="form-section active" id="usage-section">
-            <form id="usageForm">
-                <div class="form-group">
-                    <label for="usageOperator">Inisial Operator:</label>
-                    <input type="text" id="usageOperator" name="operator" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="usageMachine">Mesin:</label>
-                    <select id="usageMachine" name="machine" required>
-                        <option value="">Pilih Mesin</option>
-                        <option value="FBD Y 60">FBD Y 60</option>
-                        <option value="FBD Y 150">FBD Y 150</option>
-                        <option value="FBD Glatt">FBD Glatt</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="usageFilterType">Tipe Filter:</label>
-                    <select id="usageFilterType" name="filterType" required>
-                        <option value="">Pilih Tipe</option>
-                        <option value="warna">Warna</option>
-                        <option value="putih">Putih</option>
-                    </select>
-                </div>
-                
-                <button type="submit" class="submit-btn usage" id="usageSubmitBtn">
-                    📝 Catat Pemakaian
-                </button>
-            </form>
-        </section>
-        
-        <!-- Input Penggantian -->
-        <section class="form-section" id="replacement-section">
-            <form id="replacementForm">
-                <div class="form-group">
-                    <label for="replacementOperator">Inisial Operator:</label>
-                    <input type="text" id="replacementOperator" name="operator" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="replacementMachine">Mesin:</label>
-                    <select id="replacementMachine" name="machine" required>
-                        <option value="">Pilih Mesin</option>
-                        <option value="FBD Y 60">FBD Y 60</option>
-                        <option value="FBD Y 150">FBD Y 150</option>
-                        <option value="FBD Glatt">FBD Glatt</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="replacementFilterType">Tipe Filter:</label>
-                    <select id="replacementFilterType" name="filterType" required>
-                        <option value="">Pilih Tipe</option>
-                        <option value="warna">Warna</option>
-                        <option value="putih">Putih</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="vendor">Nama Vendor:</label>
-                    <input type="text" id="vendor" name="vendor" required>
-                </div>
-                
-                <button type="submit" class="submit-btn replacement" id="replacementSubmitBtn">
-                    🔄 Catat Penggantian
-                </button>
-            </form>
-        </section>
-        
-        <!-- Input Musnah -->
-        <section class="form-section" id="destroy-section">
-            <form id="destroyForm">
-                <div class="form-group">
-                    <label for="destroyOperator">Inisial Operator:</label>
-                    <input type="text" id="destroyOperator" name="operator" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="destroyMachine">Mesin:</label>
-                    <select id="destroyMachine" name="machine" required>
-                        <option value="">Pilih Mesin</option>
-                        <option value="FBD Y 60">FBD Y 60</option>
-                        <option value="FBD Y 150">FBD Y 150</option>
-                        <option value="FBD Glatt">FBD Glatt</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="destroyFilterType">Tipe Filter:</label>
-                    <select id="destroyFilterType" name="filterType" required>
-                        <option value="">Pilih Tipe</option>
-                        <option value="warna">Warna</option>
-                        <option value="putih">Putih</option>
-                    </select>
-                </div>
-                
-                <button type="submit" class="submit-btn destroy" id="destroySubmitBtn">
-                    🗑️ Catat Pemusnahan
-                </button>
-            </form>
-        </section>
-        
-        <!-- History -->
-        <section class="form-section" id="history-section">
-            <h2 class="history-title">📋 Riwayat Aktivitas</h2>
-            <div id="historyContainer">
-                <div class="loading">Memuat riwayat...</div>
-            </div>
-        </section>
-    </div>
-    
-    <div id="toast" class="toast"></div>
+// Initialize Supabase client
+let supabaseClient;
 
-    <script>
-        // Supabase Configuration
-        const SUPABASE_URL = 'https://ppaewszxnndnlnjfvdkl.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBwYWV3c3p4bm5kbmxuamZ2ZGtsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA2Nzc5MjIsImV4cCI6MjA3NjI1MzkyMn0.rpfnaRHlJg0C5Y4QvHXmAbIo9a7l5VBTFJfzrOckEDY';
+// Constants
+const MAX_FILTERS = 300;
+const WARNING_THRESHOLD = 230;
+
+// Initialize app
+document.addEventListener('DOMContentLoaded', async function() {
+    try {
+        // Initialize Supabase
+        supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Setup tabs
+        setupTabs();
         
-        // Constants
-        const MAX_FILTERS = 300;
-        const WARNING_THRESHOLD = 230;
+        // Load data
+        await loadDashboardData();
+        await loadHistory();
         
-        // DOM Elements
-        const filterGrid = document.getElementById('filterGrid');
-        const historyContainer = document.getElementById('historyContainer');
-        const toast = document.getElementById('toast');
+        // Setup forms
+        setupForms();
         
-        // Initialize app
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
-            setupRealtimeSubscription();
-            setupForms();
+        // Setup realtime
+        setupRealtimeSubscription();
+        
+        console.log('App initialized successfully');
+    } catch (error) {
+        console.error('Error initializing app:', error);
+        showToast('Error memuat aplikasi', 'error');
+    }
+});
+
+function setupTabs() {
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.getAttribute('data-tab');
+            switchTab(tabName);
         });
+    });
+}
+
+function switchTab(tabName) {
+    // Update tab buttons
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+        tab.removeAttribute('onclick');
+    });
+    
+    // Activate clicked tab
+    event.target.classList.add('active');
+    
+    // Update sections
+    document.querySelectorAll('.form-section').forEach(section => {
+        section.classList.remove('active');
+    });
+    
+    const targetSection = document.getElementById(tabName + '-section');
+    if (targetSection) {
+        targetSection.classList.add('active');
+    }
+    
+    // Load history if history tab is selected
+    if (tabName === 'history') {
+        loadHistory();
+    }
+}
+
+async function loadDashboardData() {
+    try {
+        const { data: filterData, error } = await supabaseClient
+            .from('filter_counters')
+            .select('*');
         
-        async function initializeApp() {
-            try {
-                await loadDashboardData();
-                await loadHistory();
-            } catch (error) {
-                console.error('Error initializing app:', error);
-                showToast('Error memuat data', 'error');
-            }
+        if (error && error.code !== 'PGRST116') {
+            throw error;
         }
         
-        async function loadDashboardData() {
-            try {
-                const { data: filterData, error } = await supabase
-                    .from('filter_counters')
-                    .select('*');
-                
-                if (error && error.code !== 'PGRST116') {
-                    throw error;
+        updateDashboard(filterData || []);
+    } catch (error) {
+        console.error('Error loading dashboard:', error);
+        updateDashboard([]);
+        showToast('Error memuat dashboard', 'error');
+    }
+}
+
+function updateDashboard(filterData) {
+    const filterGrid = document.getElementById('filterGrid');
+    const machines = ['FBD Y 60', 'FBD Y 150', 'FBD Glatt'];
+    const filterTypes = ['warna', 'putih'];
+    
+    let html = '';
+    
+    machines.forEach(machine => {
+        filterTypes.forEach(filterType => {
+            const filterInfo = filterData.find(f => f.machine === machine && f.filter_type === filterType);
+            const usage = filterInfo ? filterInfo.usage_count : 0;
+            
+            const remaining = Math.max(0, MAX_FILTERS - usage);
+            const percentage = Math.round((usage / MAX_FILTERS) * 100);
+            
+            let cardClass = 'filter-card';
+            if (usage >= WARNING_THRESHOLD) {
+                if (usage >= MAX_FILTERS) {
+                    cardClass += ' critical';
+                } else {
+                    cardClass += ' warning';
                 }
-                
-                updateDashboard(filterData || []);
-            } catch (error) {
-                console.error('Error loading dashboard:', error);
-                updateDashboard([]);
             }
-        }
-        
-        function updateDashboard(filterData) {
-            const machines = ['FBD Y 60', 'FBD Y 150', 'FBD Glatt'];
-            const filterTypes = ['warna', 'putih'];
             
-            let html = '';
-            
-            machines.forEach(machine => {
-                filterTypes.forEach(filterType => {
-                    const filterKey = `${machine}_${filterType}`;
-                    const filterInfo = filterData.find(f => f.machine === machine && f.filter_type === filterType);
-                    const usage = filterInfo ? filterInfo.usage_count : 0;
-                    
-                    const remaining = Math.max(0, MAX_FILTERS - usage);
-                    const percentage = Math.round((usage / MAX_FILTERS) * 100);
-                    
-                    let cardClass = 'filter-card';
-                    if (usage >= WARNING_THRESHOLD) {
-                        if (usage >= MAX_FILTERS) {
-                            cardClass += ' critical';
-                        } else {
-                            cardClass += ' warning';
-                        }
-                    }
-                    
-                    html += `
-                        <div class="${cardClass}">
-                            <div class="filter-header">
-                                <div class="filter-title">${machine}</div>
-                                <div class="filter-type-badge ${filterType}">${filterType.toUpperCase()}</div>
-                            </div>
-                            <div class="filter-stats">
-                                <div class="filter-stat">
-                                    <div class="filter-stat-number">${usage}</div>
-                                    <div class="filter-stat-label">Terpakai</div>
-                                </div>
-                                <div class="filter-stat">
-                                    <div class="filter-stat-number">${remaining}</div>
-                                    <div class="filter-stat-label">Sisa</div>
-                                </div>
-                                <div class="filter-stat">
-                                    <div class="filter-stat-number">${percentage}%</div>
-                                    <div class="filter-stat-label">Persentase</div>
-                                </div>
-                            </div>
+            html += `
+                <div class="${cardClass}">
+                    <div class="filter-header">
+                        <div class="filter-title">${machine}</div>
+                        <div class="filter-type-badge ${filterType}">${filterType.toUpperCase()}</div>
+                    </div>
+                    <div class="filter-stats">
+                        <div class="filter-stat">
+                            <div class="filter-stat-number">${usage}</div>
+                            <div class="filter-stat-label">Terpakai</div>
                         </div>
-                    `;
-                });
-            });
-            
-            filterGrid.innerHTML = html;
-        }
-        
-        async function loadHistory() {
-            try {
-                const { data: historyData, error } = await supabase
-                    .from('activity_history')
-                    .select('*')
-                    .order('created_at', { ascending: false })
-                    .limit(20);
-                
-                if (error && error.code !== 'PGRST116') {
-                    throw error;
-                }
-                
-                displayHistory(historyData || []);
-            } catch (error) {
-                console.error('Error loading history:', error);
-                historyContainer.innerHTML = '<div class="loading">Error memuat riwayat</div>';
-            }
-        }
-        
-        function displayHistory(historyData) {
-            if (historyData.length === 0) {
-                historyContainer.innerHTML = '<div class="loading">Belum ada riwayat aktivitas</div>';
-                return;
-            }
-            
-            const historyHTML = historyData.map(item => {
-                const date = new Date(item.created_at);
-                const timeStr = date.toLocaleString('id-ID', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-                
-                let typeLabel = '';
-                let details = '';
-                
-                switch(item.activity_type) {
-                    case 'usage':
-                        typeLabel = 'PEMAKAIAN';
-                        details = `<strong>${item.operator}</strong> menggunakan filter ${item.filter_type} pada mesin <strong>${item.machine}</strong>`;
-                        break;
-                    case 'replacement':
-                        typeLabel = 'PENGGANTIAN';
-                        details = `<strong>${item.operator}</strong> mengganti filter ${item.filter_type} pada mesin <strong>${item.machine}</strong> dengan vendor <strong>${item.vendor}</strong>`;
-                        break;
-                    case 'destroy':
-                        typeLabel = 'PEMUSNAHAN';
-                        details = `<strong>${item.operator}</strong> memusnahkan filter ${item.filter_type} pada mesin <strong>${item.machine}</strong>`;
-                        break;
-                }
-                
-                return `
-                    <div class="history-item ${item.activity_type}">
-                        <div class="history-time">${timeStr}</div>
-                        <div class="history-details">
-                            <span class="history-type ${item.activity_type}">${typeLabel}</span>
-                            ${details}
+                        <div class="filter-stat">
+                            <div class="filter-stat-number">${remaining}</div>
+                            <div class="filter-stat-label">Sisa</div>
+                        </div>
+                        <div class="filter-stat">
+                            <div class="filter-stat-number">${percentage}%</div>
+                            <div class="filter-stat-label">Persentase</div>
                         </div>
                     </div>
-                `;
-            }).join('');
-            
-            historyContainer.innerHTML = historyHTML;
+                </div>
+            `;
+        });
+    });
+    
+    filterGrid.innerHTML = html;
+}
+
+async function loadHistory() {
+    try {
+        const historyContainer = document.getElementById('historyContainer');
+        historyContainer.innerHTML = '<div class="loading">Memuat riwayat...</div>';
+        
+        const { data: historyData, error } = await supabaseClient
+            .from('activity_history')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(20);
+        
+        if (error && error.code !== 'PGRST116') {
+            throw error;
         }
         
-        function setupForms() {
-            // Usage Form
-            document.getElementById('usageForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                await handleFormSubmit(e, 'usage');
-            });
-            
-            // Replacement Form
-            document.getElementById('replacementForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                await handleFormSubmit(e, 'replacement');
-            });
-            
-            // Destroy Form
-            document.getElementById('destroyForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                await handleFormSubmit(e, 'destroy');
-            });
+        displayHistory(historyData || []);
+    } catch (error) {
+        console.error('Error loading history:', error);
+        historyContainer.innerHTML = '<div class="loading">Error memuat riwayat</div>';
+    }
+}
+
+function displayHistory(historyData) {
+    const historyContainer = document.getElementById('historyContainer');
+    
+    if (historyData.length === 0) {
+        historyContainer.innerHTML = '<div class="loading">Belum ada riwayat aktivitas</div>';
+        return;
+    }
+    
+    const historyHTML = historyData.map(item => {
+        const date = new Date(item.created_at);
+        const timeStr = date.toLocaleString('id-ID', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+        
+        let typeLabel = '';
+        let details = '';
+        
+        switch(item.activity_type) {
+            case 'usage':
+                typeLabel = 'PEMAKAIAN';
+                details = `<strong>${item.operator}</strong> menggunakan filter ${item.filter_type} pada mesin <strong>${item.machine}</strong>`;
+                break;
+            case 'replacement':
+                typeLabel = 'PENGGANTIAN';
+                details = `<strong>${item.operator}</strong> mengganti filter ${item.filter_type} pada mesin <strong>${item.machine}</strong> dengan vendor <strong>${item.vendor}</strong>`;
+                break;
+            case 'destroy':
+                typeLabel = 'PEMUSNAHAN';
+                details = `<strong>${item.operator}</strong> memusnahkan filter ${item.filter_type} pada mesin <strong>${item.machine}</strong>`;
+                break;
         }
         
-        async function handleFormSubmit(e, type) {
-            const form = e.target;
-            const formData = new FormData(form);
-            const submitBtn = form.querySelector('button[type="submit"]');
-            
-            const operator = formData.get('operator').trim();
-            const machine = formData.get('machine');
-            const filterType = formData.get('filterType');
-            const vendor = formData.get('vendor');
-            
-            if (!operator || !machine || !filterType) {
-                showToast('Mohon lengkapi semua field', 'error');
-                return;
-            }
-            
-            if (type === 'replacement' && !vendor) {
-                showToast('Nama vendor harus diisi', 'error');
-                return;
-            }
-            
-            submitBtn.disabled = true;
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = '⏳ Menyimpan...';
-            
-            try {
-                // Add to history
-                const historyData = {
-                    activity_type: type,
-                    operator: operator,
-                    machine: machine,
-                    filter_type: filterType,
-                    created_at: new Date().toISOString()
-                };
-                
-                if (type === 'replacement') {
-                    historyData.vendor = vendor;
+        return `
+            <div class="history-item ${item.activity_type}">
+                <div class="history-time">${timeStr}</div>
+                <div class="history-details">
+                    <span class="history-type ${item.activity_type}">${typeLabel}</span>
+                    ${details}
+                </div>
+            </div>
+        `;
+    }).join('');
+    
+    historyContainer.innerHTML = historyHTML;
+}
+
+function setupForms() {
+    // Usage Form
+    const usageForm = document.getElementById('usageForm');
+    if (usageForm) {
+        usageForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await handleFormSubmit(e, 'usage');
+        });
+    }
+    
+    // Replacement Form
+    const replacementForm = document.getElementById('replacementForm');
+    if (replacementForm) {
+        replacementForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await handleFormSubmit(e, 'replacement');
+        });
+    }
+    
+    // Destroy Form
+    const destroyForm = document.getElementById('destroyForm');
+    if (destroyForm) {
+        destroyForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await handleFormSubmit(e, 'destroy');
+        });
+    }
+}
+
+async function handleFormSubmit(e, type) {
+    const form = e.target;
+    const formData = new FormData(form);
+    const submitBtn = form.querySelector('button[type="submit"]');
+    
+    const operator = formData.get('operator').trim();
+    const machine = formData.get('machine');
+    const filterType = formData.get('filterType');
+    const vendor = formData.get('vendor');
+    
+    if (!operator || !machine || !filterType) {
+        showToast('Mohon lengkapi semua field', 'error');
+        return;
+    }
+    
+    if (type === 'replacement' && !vendor) {
+        showToast('Nama vendor harus diisi', 'error');
+        return;
+    }
+    
+    submitBtn.disabled = true;
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = '⏳ Menyimpan...';
+    
+    try {
+        // Add to history
+        const historyData = {
+            activity_type: type,
+            operator: operator,
+            machine: machine,
+            filter_type: filterType,
+            created_at: new Date().toISOString()
+        };
+        
+        if (type === 'replacement') {
+            historyData.vendor = vendor;
+        }
+        
+        const { error: historyError } = await supabaseClient
+            .from('activity_history')
+            .insert([historyData]);
+        
+        if (historyError) throw historyError;
+        
+        // Update usage counter
+        await updateUsageCounter(type, machine, filterType);
+        
+        // Reset form
+        form.reset();
+        
+        // Reload data
+        await loadDashboardData();
+        await loadHistory();
+        
+        let message = '';
+        switch(type) {
+            case 'usage':
+                message = '✅ Pemakaian berhasil dicatat!';
+                break;
+            case 'replacement':
+                message = '✅ Penggantian berhasil dicatat! Counter direset.';
+                break;
+            case 'destroy':
+                message = '✅ Pemusnahan berhasil dicatat!';
+                break;
+        }
+        
+        showToast(message);
+        
+    } catch (error) {
+        console.error('Error saving data:', error);
+        showToast('❌ Error menyimpan data: ' + error.message, 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+}
+
+async function updateUsageCounter(type, machine, filterType) {
+    const { data: currentFilter, error: fetchError } = await supabaseClient
+        .from('filter_counters')
+        .select('*')
+        .eq('machine', machine)
+        .eq('filter_type', filterType)
+        .single();
+    
+    let newCount = 0;
+    
+    if (fetchError && fetchError.code !== 'PGRST116') {
+        throw fetchError;
+    }
+    
+    if (type === 'usage') {
+        // Increment usage
+        newCount = currentFilter ? (currentFilter.usage_count || 0) + 1 : 1;
+    } else if (type === 'replacement') {
+        // Reset to 0 on replacement
+        newCount = 0;
+    } else if (type === 'destroy') {
+        // Keep current count for destroy
+        newCount = currentFilter ? (currentFilter.usage_count || 0) : 0;
+    }
+    
+    if (currentFilter) {
+        const { error: updateError } = await supabaseClient
+            .from('filter_counters')
+            .update({ usage_count: newCount })
+            .eq('machine', machine)
+            .eq('filter_type', filterType);
+        
+        if (updateError) throw updateError;
+    } else {
+        const { error: insertError } = await supabaseClient
+            .from('filter_counters')
+            .insert([{ 
+                machine: machine, 
+                filter_type: filterType, 
+                usage_count: newCount 
+            }]);
+        
+        if (insertError) throw insertError;
+    }
+}
+
+function setupRealtimeSubscription() {
+    if (!supabaseClient) return;
+    
+    try {
+        // Subscribe to activity history changes
+        supabaseClient
+            .channel('activity_changes')
+            .on('postgres_changes', 
+                { event: 'INSERT', schema: 'public', table: 'activity_history' }, 
+                () => {
+                    loadHistory();
                 }
-                
-                const { error: historyError } = await supabase
-                    .from('activity_history')
-                    .insert([historyData]);
-                
-                if (historyError) throw historyError;
-                
-                // Update usage counter
-                await updateUsageCounter(type, machine, filterType);
-                
-                // Reset form
-                form.reset();
-                
-                // Reload data
-                await loadDashboardData();
-                await loadHistory();
-                
-                let message = '';
-                switch(type) {
-                    case 'usage':
-                        message = '✅ Pemakaian berhasil dicatat!';
-                        break;
-                    case 'replacement':
-                        message = '✅ Penggantian berhasil dicatat! Counter direset.';
-                        break;
-                    case 'destroy':
-                        message = '✅ Pemusnahan berhasil dicatat!';
-                        break;
+            )
+            .subscribe();
+        
+        // Subscribe to filter counter changes
+        supabaseClient
+            .channel('filter_changes')
+            .on('postgres_changes', 
+                { event: '*', schema: 'public', table: 'filter_counters' }, 
+                () => {
+                    loadDashboardData();
                 }
-                
-                showToast(message);
-                
-            } catch (error) {
-                console.error('Error saving data:', error);
-                showToast('❌ Error menyimpan data: ' + error.message, 'error');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
-            }
-        }
-        
-        async function updateUsageCounter(type, machine, filterType) {
-            const { data: currentFilter, error: fetchError } = await supabase
-                .from('filter_counters')
-                .select('*')
-                .eq('machine', machine)
-                .eq('filter_type', filterType)
-                .single();
+            )
+            .subscribe();
             
-            let newCount = 0;
-            
-            if (fetchError && fetchError.code !== 'PGRST116') {
-                throw fetchError;
-            }
-            
-            if (type === 'usage') {
-                // Increment usage
-                newCount = currentFilter ? (currentFilter.usage_count || 0) + 1 : 1;
-            } else if (type === 'replacement') {
-                // Reset to 0 on replacement
-                newCount = 0;
-            } else if (type === 'destroy') {
-                // Keep current count for destroy
-                newCount = currentFilter ? (currentFilter.usage_count || 0) : 0;
-            }
-            
-            if (currentFilter) {
-                const { error: updateError } = await supabase
-                    .from('filter_counters')
-                    .update({ usage_count: newCount })
-                    .eq('machine', machine)
-                    .eq('filter_type', filterType);
-                
-                if (updateError) throw updateError;
-            } else {
-                const { error: insertError } = await supabase
-                    .from('filter_counters')
-                    .insert([{ 
-                        machine: machine, 
-                        filter_type: filterType, 
-                        usage_count: newCount 
-                    }]);
-                
-                if (insertError) throw insertError;
-            }
-        }
-        
-        function switchTab(tabName) {
-            // Update tab buttons
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // Update sections
-            document.querySelectorAll('.form-section').forEach(section => {
-                section.classList.remove('active');
-            });
-            document.getElementById(tabName + '-section').classList.add('active');
-            
-            // Load history if history tab is selected
-            if (tabName === 'history') {
-                loadHistory();
-            }
-        }
-        
-        function setupRealtimeSubscription() {
-            supabase
-                .channel('activity_changes')
-                .on('postgres_changes', 
-                    { event: 'INSERT', schema: 'public', table: 'activity_history' }, 
-                    (payload) => {
-                        loadHistory();
-                    }
-                )
-                .subscribe();
-            
-            supabase
-                .channel('filter_changes')
-                .on('postgres_changes', 
-                    { event: '*', schema: 'public', table: 'filter_counters' }, 
-                    (payload) => {
-                        loadDashboardData();
-                    }
-                )
-                .subscribe();
-        }
-        
-        function showToast(message, type = 'success') {
-            toast.textContent = message;
-            toast.className = `toast ${type}`;
-            toast.classList.add('show');
-            
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-    </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98fe325bd22781a4',t:'MTc2MDY4NzMzOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
-</html>
+        console.log('Realtime subscriptions established');
+    } catch (error) {
+        console.error('Error setting up realtime:', error);
+    }
+}
+
+function showToast(message, type = 'success') {
+    const toast = document.getElementById('toast');
+    if (!toast) {
+        console.log('Toast:', message);
+        return;
+    }
+    
+    toast.textContent = message;
+    toast.className = `toast ${type}`;
+    toast.classList.add('show');
+    
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+// Expose switchTab to global scope for onclick
+window.switchTab = switchTab;
